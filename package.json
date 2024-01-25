@@ -1,0 +1,20 @@
+{
+  "name": "xled-board",
+  "type": "module",
+  "version": "1.0.0",
+  "description": "Create a board using xled lights",
+  "main": "index.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/matthi4s/xled-board.git"
+  },
+  "author": "Matthias Neid",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/matthi4s/xled-board/issues"
+  },
+  "homepage": "https://github.com/matthi4s/xled-board#readme",
+  "dependencies": {
+    "xled-js": "git+https://github.com/matthi4s/xled-js.git#a886a16b645d28e953984a25fdb47381c2cca805"
+  }
+}
