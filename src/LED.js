@@ -1,16 +1,19 @@
+import Color from "./Color.js";
+
 export default class LED {
     /** @type {Device} */ device;
     /** @type {number} */ position;
     /** @type {boolean} */ active = true;
     /** @type {number} */ x;
     /** @type {number} */ y;
+    /** @type {Color} */ color= Color.BLACK;
 
     /**
      * @param {SourceCoordinates} sourceCoordinates
      * @return {LED}
      */
     static fromSourceCoordinates(sourceCoordinates) {
-        return new LED(sourceCoordinates.sourceLayout.device, sourceCoordinates.position)
+        return new LED(sourceCoordinates.getDevice(), sourceCoordinates.position)
             .setActive(sourceCoordinates.isActive());
     }
 
@@ -101,12 +104,29 @@ export default class LED {
     }
 
     /**
+     * @param {Color} color
+     * @return {this}
+     */
+    setColor(color) {
+        this.color = color;
+        return this;
+    }
+
+    /**
+     * @return {Color}
+     */
+    getColor() {
+        return this.color;
+    }
+
+    /**
      * @return {{}}
      */
     getAsObject() {
-        let result = {
-            active: this.active
-        };
+        let result = {};
+        if (this.active !== true) {
+            result.active = this.active;
+        }
         if (this.x !== undefined) {
             result.x = this.x;
         }

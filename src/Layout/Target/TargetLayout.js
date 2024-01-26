@@ -40,7 +40,7 @@ export default class TargetLayout {
                     this.columns.push(column);
                 }
                 for (let y = rectangle.getY(); y < rectangle.getMaxY(); y++) {
-                    this.columns[x].addY(y);
+                    column.addY(y);
                 }
             }
         }

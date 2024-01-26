@@ -1,4 +1,4 @@
-import SourceCoordinates from "./SourceCoordinates";
+import SourceCoordinates from "./SourceCoordinates.js";
 
 export default class SourceLayout {
     static SOURCE_LINEAR = 'linear';
@@ -19,20 +19,20 @@ export default class SourceLayout {
      * @return {SourceLayout}
      */
     static fromObject(device, {uuid, source, coordinates}) {
-        return new SourceLayout(device, uuid, source, SourceCoordinates.allFromArray(this, coordinates));
+        return new SourceLayout(device, uuid, source, coordinates);
     }
 
     /**
      * @param {Device} device
      * @param {string} uuid
      * @param {string} source
-     * @param {SourceCoordinates[]} coordinates
+     * @param {{x: number, y: number, z: number}[]} coordinates
      */
     constructor(device, uuid, source, coordinates) {
         this.device = device;
         this.uuid = uuid;
         this.source = source;
-        this.coordinates = coordinates;
+        this.coordinates = SourceCoordinates.allFromArray(this, coordinates);
         this.processCoordinates();
     }
 
@@ -56,6 +56,9 @@ export default class SourceLayout {
      */
     hasCoordinates(coordinates) {
         for (let coordinate of this.coordinates) {
+            if (coordinate === coordinates) {
+                continue;
+            }
             if (coordinate.isEqualTo(coordinates)) {
                 return true;
             }

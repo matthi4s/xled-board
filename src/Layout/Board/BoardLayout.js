@@ -1,5 +1,6 @@
 import fs from 'node:fs/promises';
-import LED from "./LED.js";
+import LED from "../../LED.js";
+import {Frame} from "xled-js";
 
 export default class BoardLayout {
     /** @type {LED[]} */ leds = [];
@@ -19,6 +20,7 @@ export default class BoardLayout {
                 throw new Error(`Device ${deviceId} not found`);
             }
             for (let position in layout[deviceId]) {
+                position = parseInt(position);
                 let led = new LED(device, position).setFromObject(layout[deviceId][position]);
                 boardLayout.addLED(led);
             }
@@ -87,7 +89,7 @@ export default class BoardLayout {
             if (!this.positionIndex.has(device)) {
                 this.positionIndex.set(device, new Map);
             }
-            this.positionIndex.get(device).set(led.position, led);
+            this.positionIndex.get(device).set(led.getPosition(), led);
         }
     }
 
@@ -136,5 +138,17 @@ export default class BoardLayout {
      */
     async saveToFile(path) {
         await fs.writeFile(path, this.getAsString());
+    }
+
+    /**
+     * @param {Device} device
+     * @return {Frame}
+     */
+    getFrame(device) {
+        let leds = [];
+        for (let i = 0; i < this.positionIndex.get(device.getId()).size; i++) {
+            leds.push(this.positionIndex.get(device.getId()).get(i).getColor().getLed());
+        }
+        return new Frame(leds);
     }
 }

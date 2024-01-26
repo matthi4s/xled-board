@@ -1,8 +1,8 @@
 import BoardLayout from "./Board/BoardLayout.js";
-import LED from "./Board/LED.js";
+import LED from "../LED.js";
 
 export default class LayoutMapper {
-    /** @type {SourceLayout[]} */ sourceLayouts;
+    /** @type {SourceLayout[]} */ sourceLayouts= [];
     /** @type {BoardLayout} */ boardLayout;
 
     /**
