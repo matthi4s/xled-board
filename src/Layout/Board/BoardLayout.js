@@ -114,8 +114,9 @@ export default class BoardLayout {
      * @return {LED}
      */
     getRandom() {
-        let index = Math.floor(Math.random() * this.leds.length);
-        return this.leds[index];
+        let leds = this.getAllActive();
+        let index = Math.floor(Math.random() * leds.length);
+        return leds[index];
     }
 
     /**

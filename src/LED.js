@@ -71,7 +71,7 @@ export default class LED {
      * @return {Position}
      */
     getPosition() {
-        return this.position;
+        return this.position.clone();
     }
 
     /**
