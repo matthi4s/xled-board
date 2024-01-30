@@ -68,7 +68,7 @@ await board.discoverDevices();
 ```js
 import {Device} from "xled-board";
 
-let device = new Device("<ip>", "ip").enableRGBW();
+let device = new Device("<ip>", "Twinkly_<id>").enableRGBW();
 board.addDevice(device);
 ```
 
@@ -89,7 +89,7 @@ await board.loadOrDiscoverDevices("devices.json");
 
 #### Layout
 
-This library can read the layout from all Twinkly devices and map them to a 2D grid. You can just scan the layout
+This library can read the layout from all Twinkly devices and map them to a 2D grid. You can simply scan the layout
 using the Twinkly app. Make sure to get a 2D layout which should be the default when using the simple scanning
 feature. All devices that you want to use should be grouped and scanned together. Any LEDs that shouldn't be
 part of the layout should be hidden from the scan.
@@ -102,11 +102,12 @@ await board.mapLayout({width: 40, height: 20});
 The layout definition can contain one or multiple rectangles if you have a more complex layout.
 You can define a layout with two rectangle like this:
 ```
-3   xx
-2   xx
-1 oooo
-0 oooo
-  0123
+3 |   xx
+2 |   xx
+1 | oooo
+0 | oooo
+--+----- 
+  | 0123
 ```
 using this code:
 ```js
