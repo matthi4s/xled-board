@@ -11,6 +11,13 @@ export default class Color {
     static get MAGENTA() { return new Color(255, 0, 255) };
     static get GRAY() { return new Color(128, 128, 128) }
 
+    static get RANDOM() {
+        let r = Math.floor(Math.random() * 256);
+        let g = Math.floor(Math.random() * 256);
+        let b = Math.floor(Math.random() * 256);
+        return new Color(r, g, b);
+    }
+
     /** @type {number} */ r = 0;
     /** @type {number} */ g = 0;
     /** @type {number} */ b = 0;
@@ -112,5 +119,42 @@ export default class Color {
      */
     getLed() {
         return new Led(this.r, this.g, this.b, this.w);
+    }
+
+    /**
+     * @return {Color}
+     */
+    clone() {
+        return new Color(this.r, this.g, this.b, this.w);
+    }
+
+    /**
+     * @param {number} percent
+     * @return {this}
+     */
+    lighten(percent) {
+        this.r = Math.min(255, Math.round(this.r * (1 + percent)));
+        this.g = Math.min(255, Math.round(this.g * (1 + percent)));
+        this.b = Math.min(255, Math.round(this.b * (1 + percent)));
+        return this;
+    }
+
+    /**
+     * @param {number} percent
+     * @return {this}
+     */
+    darken(percent) {
+        this.r = Math.max(0, Math.round(this.r * (1 - percent)));
+        this.g = Math.max(0, Math.round(this.g * (1 - percent)));
+        this.b = Math.max(0, Math.round(this.b * (1 - percent)));
+        return this;
+    }
+
+    /**
+     * @param {Color} color
+     * @return {boolean}
+     */
+    isEqualTo(color) {
+        return this.getR() === color.getR() && this.getG() === color.getG() && this.getB() === color.getB();
     }
 }

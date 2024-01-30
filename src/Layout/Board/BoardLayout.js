@@ -5,7 +5,7 @@ import {Frame} from "xled-js";
 export default class BoardLayout {
     /** @type {LED[]} */ leds = [];
     /** @type {Map<number,Map<number,LED>>} */ coordinatesIndex = new Map;
-    /** @type {Map<string,Map<number>>} */ positionIndex = new Map;
+    /** @type {Map<string,Map<number>>} */ deviceIndex = new Map;
 
     /**
      * @param {Board} board
@@ -19,9 +19,9 @@ export default class BoardLayout {
             if (!device) {
                 throw new Error(`Device ${deviceId} not found`);
             }
-            for (let position in layout[deviceId]) {
-                position = parseInt(position);
-                let led = new LED(device, position).setFromObject(layout[deviceId][position]);
+            for (let index in layout[deviceId]) {
+                index = parseInt(index);
+                let led = new LED(device, index).setFromObject(layout[deviceId][index]);
                 boardLayout.addLED(led);
             }
         }
@@ -62,7 +62,7 @@ export default class BoardLayout {
      */
     index() {
         this.indexCoordinates();
-        this.indexPositions();
+        this.indexDevices();
         return this;
     }
 
@@ -83,32 +83,52 @@ export default class BoardLayout {
     /**
      * @protected
      */
-    indexPositions() {
+    indexDevices() {
         for (let led of this.leds) {
             let device = led.getDevice().getId();
-            if (!this.positionIndex.has(device)) {
-                this.positionIndex.set(device, new Map);
+            if (!this.deviceIndex.has(device)) {
+                this.deviceIndex.set(device, new Map);
             }
-            this.positionIndex.get(device).set(led.getPosition(), led);
+            this.deviceIndex.get(device).set(led.getIndex(), led);
         }
     }
 
     /**
-     * @param {number} x
-     * @param {number} y
+     * @param {Position} position
      * @return {LED|null}
      */
-    getByCoordinates(x, y) {
-        return this.coordinatesIndex.get(x)?.get(y) ?? null;
+    getByPosition(position) {
+        return this.coordinatesIndex.get(position.getX())?.get(position.getY()) ?? null;
     }
 
     /**
      * @param {string} device
-     * @param {number} position
+     * @param {number} index
      * @return {LED|null}
      */
-    getByPosition(device, position) {
-        return this.positionIndex.get(device)?.get(position) ?? null;
+    getByIndex(device, index) {
+        return this.deviceIndex.get(device)?.get(index) ?? null;
+    }
+
+    /**
+     * @return {LED}
+     */
+    getRandom() {
+        let index = Math.floor(Math.random() * this.leds.length);
+        return this.leds[index];
+    }
+
+    /**
+     * @return {LED[]}
+     */
+    getAllActive() {
+        let leds = [];
+        for (let led of this.leds) {
+            if (led.isActive()) {
+                leds.push(led);
+            }
+        }
+        return leds;
     }
 
     /**
@@ -123,10 +143,10 @@ export default class BoardLayout {
      */
     getAsObject() {
         let result = {};
-        for (let device of this.positionIndex.keys()) {
+        for (let device of this.deviceIndex.keys()) {
             result[device] = [];
-            for (let i = 0; i < this.positionIndex.get(device).size; i++) {
-                result[device].push(this.positionIndex.get(device).get(i).getAsObject());
+            for (let i = 0; i < this.deviceIndex.get(device).size; i++) {
+                result[device].push(this.deviceIndex.get(device).get(i).getAsObject());
             }
         }
         return result;
@@ -146,8 +166,8 @@ export default class BoardLayout {
      */
     getFrame(device) {
         let leds = [];
-        for (let i = 0; i < this.positionIndex.get(device.getId()).size; i++) {
-            leds.push(this.positionIndex.get(device.getId()).get(i).getColor().getLed());
+        for (let i = 0; i < this.deviceIndex.get(device.getId()).size; i++) {
+            leds.push(this.deviceIndex.get(device.getId()).get(i).getColor().getLed());
         }
         return new Frame(leds);
     }

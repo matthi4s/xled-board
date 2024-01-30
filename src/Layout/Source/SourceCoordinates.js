@@ -4,7 +4,7 @@ export default class SourceCoordinates {
     /** @type {number} */ y;
     /** @type {number} */ z;
     /** @type {boolean} */ active = true;
-    /** @type {number|null} */ position = null;
+    /** @type {number|null} */ index = null;
 
     /**
      * @param {SourceLayout} sourceLayout
@@ -66,11 +66,11 @@ export default class SourceCoordinates {
     }
 
     /**
-     * @param {number} position
+     * @param {number} index
      * @return {this}
      */
-    setPosition(position) {
-        this.position = position;
+    setIndex(index) {
+        this.index = index;
         return this;
     }
 

@@ -4,20 +4,18 @@ import LayoutMapper from "./Layout/LayoutMapper.js";
 import TargetLayout from "./Layout/Target/TargetLayout.js";
 import BoardLayout from "./Layout/Board/BoardLayout.js";
 import fs from "node:fs/promises";
+import Position from "./Position.js";
 
 export default class Board {
     /** @type {Map<string, Device>} */ devices = new Map;
     /** @type {BoardLayout} */ layout;
-    /** @type {number} */ frameInterval;
-    /** @type {Promise|null} */ frameSendPromise = null;
-    /** @type {boolean} */ frameQueued = false;
-    /** @type {Timeout|null} */ frameTimeout = null;
 
     /**
      * @param {Device} device
      * @returns {this}
      */
     addDevice(device) {
+        device.setBoard(this);
         this.devices.set(device.getId(), device);
         return this;
     }
@@ -117,58 +115,122 @@ export default class Board {
     }
 
     /**
-     * @param {number} frameInterval
+     * @param {string} frameMode
+     * @param {number|null} frameInterval
+     * @return {this}
      */
-    startShowingFrames(frameInterval = 10000) {
-        this.frameInterval = frameInterval;
-        this.sendNextFrame();
+    start(frameMode = Device.FRAME_MODE_QUEUEING, frameInterval = null) {
+        this.devices.forEach(device => device.start(frameMode, frameInterval));
+        return this;
     }
 
     /**
      * @return {Promise<void>}
      */
-    async sendNextFrame() {
-        if (this.frameTimeout) {
-            clearTimeout(this.frameTimeout);
-            this.frameTimeout = null;
-        }
-        if (this.frameSendPromise) {
-            await this.frameSendPromise;
-        }
-        await this.sendFrame();
-        if (this.frameQueued) {
-            this.frameQueued = false;
-            await this.sendNextFrame();
-            return;
-        }
-        this.frameTimeout = setTimeout(() => this.sendNextFrame(), this.frameInterval);
-    }
-
-    /**
-     * @return {void}
-     */
-    queueFrame() {
-        if (this.frameQueued) {
-            return;
-        }
-        this.frameQueued = true;
-        if (this.frameSendPromise) {
-            return;
-        }
-        this.sendNextFrame();
-    }
-
-    /**
-     * @return {Promise<void>}
-     */
-    async sendFrame() {
+    async sendFullFrame() {
         let promises = [];
         for (let device of this.devices.values()) {
-            let frame = this.layout.getFrame(device);
-            promises.push(device.sendRealtimeFrame(frame));
+            promises.push(device.sendCurrentFrame());
         }
-        this.frameSendPromise = Promise.all(promises);
-        await this.frameSendPromise;
-        this.frameSendPromise = null;
+        await Promise.all(promises);
+    }
+
+    /**
+     * @return {Position}
+     */
+    getRandomPosition() {
+        return this.layout.getRandom().getPosition();
+    }
+
+    /**
+     * @param {Position} position
+     * @param {Color} color
+     * @return {this}
+     */
+    setColor(position, color) {
+        let led = this.layout.getByPosition(position);
+        if (!led) {
+            throw new Error("No LED found at " + position.getAsString());
+        }
+        led.setColor(color);
+        return this;
+    }
+
+    /**
+     * @param {Position} position
+     * @return {Color}
+     */
+    getColor(position) {
+        let led = this.layout.getByPosition(position);
+        if (!led) {
+            throw new Error("No LED found at " + position.getAsString());
+        }
+        return led.getColor();
+    }
+
+    /**
+     * @param {Color} color
+     * @return {this}
+     */
+    colorAll(color) {
+        for (let led of this.layout.getAllActive()) {
+            led.setColor(color);
+        }
+        return this;
+    }
+
+    /**
+     * @param {Position} start
+     * @param {Position} end
+     * @param {Color} color
+     * @return {this}
+     */
+    drawRectangle(start, end, color) {
+        for (let x = start.getX(); x <= end.getX(); x++) {
+            for (let y = start.getY(); y <= end.getY(); y++) {
+                let led = this.layout.getByPosition(new Position(x, y));
+                if (!led) {
+                    continue;
+                }
+                led.setColor(color);
+            }
+        }
+        return this;
+    }
+
+    /**
+     * @param {Position} start
+     * @param {Position} end
+     * @param {Color} color
+     * @return {this}
+     */
+    drawLine(start, end, color) {
+        let dx = Math.abs(end.getX() - start.getX());
+        let dy = Math.abs(end.getY() - start.getY());
+        let sx = start.getX() < end.getX() ? 1 : -1;
+        let sy = start.getY() < end.getY() ? 1 : -1;
+        let err = dx - dy;
+
+        let current = start.clone();
+
+        while (true) {
+            let led = this.layout.getByPosition(current);
+            if (led) {
+                led.setColor(color);
+            }
+            if (current.getX() === end.getX() && current.getY() === end.getY()) {
+                break;
+            }
+            let e2 = 2 * err;
+            if (e2 > -dy) {
+                err -= dy;
+                current.setX(current.getX() + sx);
+            }
+            if (e2 < dx) {
+                err += dx;
+                current.setY(current.getY() + sy);
+            }
+        }
+        return this;
     }
 }

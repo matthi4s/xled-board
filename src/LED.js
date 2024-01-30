@@ -1,11 +1,11 @@
 import Color from "./Color.js";
+import Position from "./Position.js";
 
 export default class LED {
     /** @type {Device} */ device;
-    /** @type {number} */ position;
+    /** @type {number} */ index;
     /** @type {boolean} */ active = true;
-    /** @type {number} */ x;
-    /** @type {number} */ y;
+    /** @type {Position} */ position= new Position();
     /** @type {Color} */ color= Color.BLACK;
 
     /**
@@ -13,17 +13,17 @@ export default class LED {
      * @return {LED}
      */
     static fromSourceCoordinates(sourceCoordinates) {
-        return new LED(sourceCoordinates.getDevice(), sourceCoordinates.position)
+        return new LED(sourceCoordinates.getDevice(), sourceCoordinates.index)
             .setActive(sourceCoordinates.isActive());
     }
 
     /**
      * @param {Device} device
-     * @param {number} position
+     * @param {number} index
      */
-    constructor(device, position) {
+    constructor(device, index) {
         this.device = device;
-        this.position = position;
+        this.index = index;
     }
 
     /**
@@ -31,7 +31,7 @@ export default class LED {
      * @return {this}
      */
     setX(x) {
-        this.x = x;
+        this.position.setX(x);
         return this;
     }
 
@@ -39,7 +39,7 @@ export default class LED {
      * @return {number}
      */
     getX() {
-        return this.x;
+        return this.position.getX();
     }
 
     /**
@@ -47,7 +47,7 @@ export default class LED {
      * @return {this}
      */
     setY(y) {
-        this.y = y;
+        this.position.setY(y);
         return this;
     }
 
@@ -55,7 +55,23 @@ export default class LED {
      * @return {number}
      */
     getY() {
-        return this.y;
+        return this.position.getY();
+    }
+
+    /**
+     * @param {Position} position
+     * @return {this}
+     */
+    setPosition(position) {
+        this.position = position;
+        return this;
+    }
+
+    /**
+     * @return {Position}
+     */
+    getPosition() {
+        return this.position;
     }
 
     /**
@@ -99,8 +115,8 @@ export default class LED {
     /**
      * @return {number}
      */
-    getPosition() {
-        return this.position;
+    getIndex() {
+        return this.index;
     }
 
     /**
@@ -108,6 +124,7 @@ export default class LED {
      * @return {this}
      */
     setColor(color) {
+        this.device.queueFrame();
         this.color = color;
         return this;
     }
@@ -127,11 +144,11 @@ export default class LED {
         if (this.active !== true) {
             result.active = this.active;
         }
-        if (this.x !== undefined) {
-            result.x = this.x;
+        if (this.getX() !== undefined) {
+            result.x = this.getX();
         }
-        if (this.y !== undefined) {
-            result.y = this.y;
+        if (this.getY() !== undefined) {
+            result.y = this.getY();
         }
         return result;
     }

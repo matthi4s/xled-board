@@ -41,9 +41,9 @@ export default class SourceLayout {
      * @return void
      */
     processCoordinates() {
-        let position = 0;
+        let index = 0;
         for (let coordinates of this.coordinates) {
-            coordinates.setPosition(position++);
+            coordinates.setIndex(index++);
             if (this.hasCoordinates(coordinates)) {
                 coordinates.setInactive();
             }

@@ -1,15 +1,30 @@
-import {Light} from "xled-js";
+import {deviceMode, Light} from "xled-js";
 import SourceLayout from "./Layout/Source/SourceLayout.js";
 
 export default class Device {
     static MODE_REALTIME = 'rt';
 
+    static FRAME_MODE_QUEUEING = 'queueing';
+    static FRAME_MODE_INTERVAL = 'interval';
+
+    static INTERVAL_DEFAULTS = {
+        [Device.FRAME_MODE_QUEUEING]: 10_000,
+        [Device.FRAME_MODE_INTERVAL]: 100
+    }
+
+    /** @type {Board} */ board;
     /** @type {string} */ ip;
     /** @type {string|null} */ id;
     /** @type {Light} */ light;
     /** @type {boolean} */ rgbw = false;
     /** @type {boolean} */ loggedIn = false;
     /** @type {string|null} */ lastMode = null;
+    /** @type {string|null} */ frameMode = null;
+    /** @type {number} */ frameInterval;
+    /** @type {Promise|null} */ frameSendPromise = null;
+    /** @type {boolean} */ frameQueued = false;
+    /** @type {Timeout|null} */ frameQueueTimeout = null;
+    /** @type {Timeout|null} */ frameTimeout = null;
 
     /**
      * @param {string} ip
@@ -33,6 +48,15 @@ export default class Device {
         this.ip = ip;
         this.id = id;
         this.light = new Light(this.ip);
+    }
+
+    /**
+     * @param {Board} board
+     * @return {this}
+     */
+    setBoard(board) {
+        this.board = board;
+        return this;
     }
 
     /**
@@ -125,6 +149,29 @@ export default class Device {
     }
 
     /**
+     * @return {string|null}
+     */
+    getFrameMode() {
+        return this.frameMode;
+    }
+
+    /**
+     * @param {number} frameInterval
+     * @return {this}
+     */
+    setFrameInterval(frameInterval) {
+        this.frameInterval = frameInterval;
+        return this;
+    }
+
+    /**
+     * @return {number}
+     */
+    getFrameInterval() {
+        return this.frameInterval;
+    }
+
+    /**
      * @param {import("xled-js").Frame} frame
      * @return {Promise<this>}
      */
@@ -133,5 +180,89 @@ export default class Device {
         await this.setModeIfNecessary(Device.MODE_REALTIME);
         await this.light.sendRealTimeFrame(frame);
         return this;
+    }
+
+    /**
+     * @return {Promise<this>}
+     */
+    async sendCurrentFrame() {
+        let frame = this.board.getLayout().getFrame(this);
+        await this.sendRealtimeFrame(frame);
+        return this;
+    }
+
+    /**
+     * @param {string} frameMode
+     * @param {number|null} frameInterval
+     * @return {this}
+     */
+    start(frameMode = Device.FRAME_MODE_QUEUEING, frameInterval = null) {
+        this.frameMode = frameMode;
+        if (frameInterval === null) {
+            if (this.frameInterval === undefined) {
+                this.frameInterval = Device.INTERVAL_DEFAULTS[frameMode];
+            }
+        } else {
+            this.frameInterval = frameInterval;
+        }
+        if (frameMode === Device.FRAME_MODE_QUEUEING) {
+            this.sendNextQueueFrame().catch(console.error);
+            return this;
+        }
+        if (frameMode === Device.FRAME_MODE_INTERVAL) {
+            this.runInterval().catch(console.error);
+        }
+    }
+
+    /**
+     * @return {Promise<void>}
+     */
+    async runInterval() {
+        while (true) {
+            await this.sendCurrentFrame();
+            await new Promise(resolve => setTimeout(resolve, this.frameInterval));
+        }
+    }
+
+    /**
+     * @return {Promise<void>}
+     */
+    async sendNextQueueFrame() {
+        if (this.frameTimeout) {
+            clearTimeout(this.frameTimeout);
+            this.frameTimeout = null;
+        }
+        if (this.frameSendPromise) {
+            return this.frameSendPromise;
+        }
+        this.frameSendPromise = this.sendCurrentFrame();
+        await this.frameSendPromise;
+        this.frameSendPromise = null;
+        if (this.frameQueued) {
+            this.frameQueued = false;
+            await this.sendNextQueueFrame();
+            return;
+        }
+        this.frameTimeout = setTimeout(() => this.sendNextQueueFrame(), this.frameInterval);
+    }
+
+    /**
+     * @return {void}
+     */
+    queueFrame() {
+        if (this.frameMode !== Device.FRAME_MODE_QUEUEING) {
+            return;
+        }
+        if (this.frameQueued || this.frameQueueTimeout) {
+            return;
+        }
+        this.frameQueueTimeout = setTimeout(() => {
+            this.frameQueueTimeout = null;
+            if (this.frameSendPromise) {
+                this.frameQueued = true;
+            } else {
+                this.sendNextQueueFrame().catch(console.error);
+            }
+        }, 25);
     }
 }
