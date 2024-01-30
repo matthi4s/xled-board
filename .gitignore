@@ -2,3 +2,5 @@ node_modules
 .idea
 package-lock.json
 test.js
+devices.json
+layout.json

@@ -34,11 +34,13 @@ export default class Board {
      */
     async discoverDevices(timeout = 5000) {
         let devices = await discoverTwinklyDevices(timeout);
+        let promises = [];
         for (let [, twinklyDevice] of devices) {
             let device = new Device(twinklyDevice.ip, twinklyDevice.deviceId);
-            await device.autoDetectRGBW();
+            promises.push(device.autoDetectRGBW());
             this.addDevice(device);
         }
+        await Promise.all(promises);
         return this;
     }
 
@@ -172,7 +174,7 @@ export default class Board {
      * @param {Color} color
      * @return {this}
      */
-    colorAll(color) {
+    setColorForAll(color) {
         for (let led of this.layout.getAllActive()) {
             led.setColor(color);
         }

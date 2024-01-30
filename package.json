@@ -15,6 +15,6 @@
   },
   "homepage": "https://github.com/matthi4s/xled-board#readme",
   "dependencies": {
-    "xled-js": "git+https://github.com/matthi4s/xled-js.git#a886a16b645d28e953984a25fdb47381c2cca805"
+    "xled-js": "github:matthi4s/xled-js#a886a16b645d28e953984a25fdb47381c2cca805"
   }
 }
