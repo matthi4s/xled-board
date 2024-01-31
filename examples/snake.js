@@ -16,6 +16,7 @@ const STATE_STARTING = 0, STATE_RUNNING = 1, STATE_GAME_OVER = 2;
 let state = STATE_STARTING;
 let snake = [];
 let direction = new Position(1, 0);
+let lastMovedDirection = direction.clone();
 let tickInterval;
 
 // input
@@ -28,22 +29,22 @@ if (process.stdin.isTTY) {
 process.stdin.on('keypress', (str, key) => {
     switch (key.name) {
         case 'up':
-            if (direction.getY() === 0 || snake.length === 1) {
+            if (lastMovedDirection.getY() === 0 || snake.length === 1) {
                 direction = new Position(0, 1);
             }
             break;
         case 'down':
-            if (direction.getY() === 0 || snake.length === 1) {
+            if (lastMovedDirection.getY() === 0 || snake.length === 1) {
                 direction = new Position(0, -1);
             }
             break;
         case 'left':
-            if (direction.getX() === 0 || snake.length === 1) {
+            if (lastMovedDirection.getX() === 0 || snake.length === 1) {
                 direction = new Position(-1, 0);
             }
             break;
         case 'right':
-            if (direction.getX() === 0 || snake.length === 1) {
+            if (lastMovedDirection.getX() === 0 || snake.length === 1) {
                 direction = new Position(1, 0);
             }
             break;
@@ -80,6 +81,7 @@ function tick() {
     board.setColor(oldHeadPosition, Color.WHITE);
 
     let headPosition = oldHeadPosition.clone().addPosition(direction);
+    lastMovedDirection = direction.clone();
     let led = board.getLayout().getByPosition(headPosition);
 
     // hit wall
