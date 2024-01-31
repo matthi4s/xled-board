@@ -4,6 +4,9 @@ import SourceLayout from "./Layout/Source/SourceLayout.js";
 export default class Device {
     static MODE_REALTIME = 'rt';
 
+    static PROTOCOL_REST = 'rest';
+    static PROTOCOL_UDP = 'udp';
+
     static FRAME_MODE_QUEUEING = 'queueing';
     static FRAME_MODE_INTERVAL = 'interval';
 
@@ -18,6 +21,7 @@ export default class Device {
     /** @type {Light} */ light;
     /** @type {boolean} */ rgbw = false;
     /** @type {boolean} */ loggedIn = false;
+    /** @type {string} */ protocol = Device.PROTOCOL_UDP;
     /** @type {string|null} */ lastMode = null;
     /** @type {string|null} */ frameMode = null;
     /** @type {number} */ frameInterval;
@@ -172,13 +176,35 @@ export default class Device {
     }
 
     /**
+     * @param {string} protocol
+     * @return {this}
+     */
+    setProtocol(protocol) {
+        this.protocol = protocol;
+        return this;
+    }
+
+    /**
+     * @return {string}
+     */
+    getProtocol() {
+        return this.protocol;
+    }
+
+    /**
      * @param {import("xled-js").Frame} frame
      * @return {Promise<this>}
      */
     async sendRealtimeFrame(frame) {
         await this.loginIfNecessary();
         await this.setModeIfNecessary(Device.MODE_REALTIME);
-        await this.light.sendRealTimeFrame(frame);
+        if (this.protocol === Device.PROTOCOL_REST) {
+            await this.light.sendRealTimeFrame(frame);
+            return this;
+        } else if (this.protocol === Device.PROTOCOL_UDP) {
+            await this.light.sendRealTimeFrameUDP(frame);
+            await new Promise(resolve => setTimeout(resolve, 42));
+        }
         return this;
     }
 

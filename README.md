@@ -47,6 +47,8 @@ setInterval(() => {
 }, 100);
 ```
 
+For a more examples, see [examples](examples).
+
 ## Usage
 
 ```js
@@ -85,6 +87,18 @@ await board.loadDevices("devices.json");
 **Load devices from file or discover them and save**
 ```js
 await board.loadOrDiscoverDevices("devices.json");
+```
+
+**UDP vs REST**
+
+You can send frames using UDP or the REST HTTP API, UDP is faster and allows more frames per second but it might
+be unreliable. The default is UDP. You can switch to REST like this:
+```js
+// for one device
+device.setProtocol(Device.PROTOCOL_REST);
+
+// for all devices
+board.setProtocol(Device.PROTOCOL_REST);
 ```
 
 #### Layout

@@ -83,6 +83,17 @@ export default class Board {
     }
 
     /**
+     * @param {string} protocol
+     * @return {this}
+     */
+    setProtocol(protocol) {
+        for (let device of this.devices.values()) {
+            device.setProtocol(protocol);
+        }
+        return this;
+    }
+
+    /**
      * @param {TargetLayout|{x?: number, y?: number, width: number, height: number}|{x?: number, y?: number, width: number, height: number}[]} targetLayout
      * @return {Promise<BoardLayout>}
      */

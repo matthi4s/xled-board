@@ -28,16 +28,24 @@ if (process.stdin.isTTY) {
 process.stdin.on('keypress', (str, key) => {
     switch (key.name) {
         case 'up':
-            direction = new Position(0, 1);
+            if (direction.getY() === 0 || snake.length === 1) {
+                direction = new Position(0, 1);
+            }
             break;
         case 'down':
-            direction = new Position(0, -1);
+            if (direction.getY() === 0 || snake.length === 1) {
+                direction = new Position(0, -1);
+            }
             break;
         case 'left':
-            direction = new Position(-1, 0);
+            if (direction.getX() === 0 || snake.length === 1) {
+                direction = new Position(-1, 0);
+            }
             break;
         case 'right':
-            direction = new Position(1, 0);
+            if (direction.getX() === 0 || snake.length === 1) {
+                direction = new Position(1, 0);
+            }
             break;
         case 'c':
             if (key.ctrl) {
@@ -50,8 +58,6 @@ process.stdin.on('keypress', (str, key) => {
 
     if (state === STATE_STARTING) {
         run();
-    } else if (state === STATE_GAME_OVER) {
-        start();
     }
 });
 
@@ -66,17 +72,18 @@ function start() {
 
 function run() {
     state = STATE_RUNNING;
-    tickInterval = setInterval(tick, 500);
+    tickInterval = setInterval(tick, 200);
 }
 
 function tick() {
     let oldHeadPosition = snake[0];
     board.setColor(oldHeadPosition, Color.WHITE);
+
     let headPosition = oldHeadPosition.clone().addPosition(direction);
     let led = board.getLayout().getByPosition(headPosition);
 
-    // game over
-    if (!led || led.getColor().isEqualTo(Color.WHITE)) {
+    // hit wall
+    if (!led) {
         gameOver();
         return;
     }
@@ -89,8 +96,15 @@ function tick() {
         board.getLayout().getByPosition(tail).setColor(Color.BLACK);
     }
 
+    // hit self
+    if (led.getColor().isEqualTo(Color.WHITE)) {
+        gameOver();
+        return;
+    }
+
     // move
     led.setColor(Color.BLUE);
+    snake.unshift(headPosition);
 }
 
 function placeFood() {
@@ -105,6 +119,8 @@ function gameOver() {
     state = STATE_GAME_OVER;
     board.setColorForAll(Color.RED);
     clearInterval(tickInterval);
+    console.log("Game Over! Score: " + snake.length);
+    setTimeout(start, 3000);
 }
 
 start();
